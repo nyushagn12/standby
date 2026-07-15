@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>StandBy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=League+Gothic&display=swap" rel="stylesheet">
+<style>
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+  --glass-blur: blur(2px) saturate(200%);
+  --font-sf: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --spring: 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  --spring-in: 0.5s cubic-bezier(0.85, 0, 0.15, 1);
+  --bg-url: url('https://images.unsplash.com/photo-1519114056088-b877fe073a5e?q=80&w=1333&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&fit=crop');
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-sf);
+}
+body {
+  background-color: #000;
+  background-image: var(--bg-url);
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  color: var(--text-primary);
+  transition: background-image 0.8s ease;
+}
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+#desktop {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+#widgets-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 24px;
+  padding: 120px 40px 40px 40px;
+  width: 100%;
+  height: 100%;
+  align-content: start;
+  overflow-y: auto;
+}
+.widget {
+  aspect-ratio: 1;
+  border-radius: 32px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s ease;
+  animation: popIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  cursor: grab;
+}
+.widget:active {
+  transform: scale(0.9) !important;
+  transition: transform 0.1s ease-out;
+  cursor: grabbing;
+}
+.widget.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+.widget-remove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+.widget:hover .widget-remove {
+  opacity: 1;
+}
+.widget-time {
+  justify-content: center;
+  align-items: center;
+}
+.time-display {
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.clock-default {
+  font-family: "League Gothic", sans-serif;
+  font-size: 5.5rem;
+  font-weight: 400;
+}
+.clock-thin {
+  font-family: var(--font-sf);
+  font-size: 4.2rem;
+  font-weight: 100;
+  letter-spacing: -0.04em;
+}
+.clock-bold {
+  font-family: var(--font-sf);
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.widget-battery { justify-content: space-between; }
+.battery-icon-container {
+  position: relative;
+  width: 60px;
+  height: 28px;
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 8px;
+  padding: 2px;
+}
+.battery-icon-container::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 12px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 0 3px 3px 0;
+}
+.battery-level {
+  height: 100%;
+  background: #43e97b;
+  border-radius: 4px;
+  transition: width 0.5s ease, background 0.5s ease;
+}
+.battery-text { font-size: 2.2rem; font-weight: 300; }
+.widget-weather { justify-content: space-between; }
+.weather-icon { font-size: 2.8rem; }
+.weather-temp { font-size: 2.5rem; font-weight: 300; }
+.weather-city { font-size: 1rem; color: var(--text-secondary); font-weight: 500; }
+.widget-stopwatch { justify-content: space-between; }
+.stopwatch-display {
+  font-size: 1.8rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 300;
+  text-align: center;
+  margin-top: 10px;
+}
+.stopwatch-controls { display: flex; gap: 12px; justify-content: center; }
+.sw-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sw-btn:active { background: rgba(255,255,255,0.4); }
+.widget-custom {
+  padding: 0;
+}
+.floating-btn {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  color: white;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 50;
+}
+.floating-btn:active { 
+  transform: scale(1.33); 
+  transition: transform 0.1s ease-out;
+}
+#btn-add-widget { top: 40px; left: 40px; }
+#btn-settings { top: 40px; right: 40px; }
+#btn-library { bottom: 40px; right: 40px; }
+.morph-clone {
+  position: fixed;
+  z-index: 90;
+  transition: all var(--spring);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+}
+.morph-clone.expanded {
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important; height: 100vh !important;
+  border-radius: 0 !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  border-color: transparent !important;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 100;
+}
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 0.1s;
+}
+.modal-content {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.settings-group {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.setting-item:last-child { border-bottom: none; }
+.setting-item label { font-size: 1.1rem; font-weight: 400; flex-shrink: 0;}
+.setting-item input[type="text"], .setting-item select {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  text-align: right;
+  outline: none;
+  width: 100%;
+  margin-left: 16px;
+}
+.setting-item input[type="file"] {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  width: 100%;
+  text-align: right;
+  margin-left: 16px;
+}
+.setting-item select option { background: #1c1c1e; color: white; }
+.btn {
+  padding: 18px;
+  border-radius: 20px;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s;
+  background: rgba(255,255,255,0.15);
+  color: white;
+}
+.btn:active { transform: scale(0.96); }
+.btn-danger { background: rgba(255, 59, 48, 0.15); color: #ff453a; }
+.selector-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.grid-item {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  position: relative;
+}
+.grid-item:active { 
+  transform: scale(1.33); 
+  transition: transform 0.1s ease-out;
+}
+.grid-icon { font-size: 28px; }
+.grid-name { display: none; }
+.app-library-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.app-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  position: relative;
+  overflow: hidden;
+}
+.app-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.app-circle:active {
+  transform: scale(1.33);
+  transition: transform 0.1s ease-out;
+}
+.code-input {
+  width: 100%;
+  height: 120px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: #fff;
+  font-family: monospace;
+  padding: 12px;
+  outline: none;
+  resize: vertical;
+}
+</style>
+</head>
+<body>
+<div id="desktop">
+  <div id="widgets-container"></div>
+  <button id="btn-add-widget" class="glass floating-btn">＋</button>
+  <button id="btn-settings" class="glass floating-btn">⚙</button>
+  <button id="btn-library" class="glass floating-btn">⚏</button>
+</div>
+
+<div id="modal-settings" class="modal-overlay" onclick="UI.closeModal('modal-settings')">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="settings-group">
+      <div class="setting-item">
+        <label>Wallpaper URL</label>
+        <input type="text" id="cfg-wallpaper">
+      </div>
+      <div class="setting-item">
+        <label>Upload Wallpaper</label>
+        <input type="file" id="cfg-wallpaper-file" accept="image/*">
+      </div>
+      <div class="setting-item">
+        <label>Time Format</label>
+        <select id="cfg-time-format">
+          <option value="24">24-Hour</option>
+          <option value="12">12-Hour</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Clock Style</label>
+        <select id="cfg-clock-style">
+          <option value="default">Default</option>
+          <option value="thin">Thin</option>
+          <option value="bold">Bold</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-danger" id="btn-reset">Reset to Defaults</button>
+  </div>
+</div>
+
+<div id="modal-selector" class="modal-overlay" onclick="UI.closeModal('modal-selector')">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="selector-grid" id="selector-grid"></div>
+  </div>
+</div>
+
+<div id="modal-library" class="modal-overlay" onclick="UI.closeModal('modal-library')">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="app-library-container" id="app-grid"></div>
+  </div>
+</div>
+
+<div id="modal-add-app" class="modal-overlay" onclick="UI.closeModal('modal-add-app')">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="settings-group">
+      <div class="setting-item"><label>Name</label><input type="text" id="app-name"></div>
+      <div class="setting-item"><label>URL</label><input type="text" id="app-url" value="https://"></div>
+      <div class="setting-item"><label>Icon</label><input type="file" id="app-icon" accept="image/*"></div>
+    </div>
+    <button class="btn" onclick="window.app.saveNewApp()">Add App</button>
+  </div>
+</div>
+
+<div id="modal-custom-widget" class="modal-overlay" onclick="UI.closeModal('modal-custom-widget')">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <textarea id="cw-html" class="code-input" placeholder="HTML Structure"></textarea>
+    <textarea id="cw-css" class="code-input" placeholder="CSS Styles"></textarea>
+    <textarea id="cw-js" class="code-input" placeholder="JavaScript"></textarea>
+    <button class="btn" onclick="window.app.saveCustomWidget()">Create Widget</button>
+  </div>
+</div>
+
+<script>
+class Store {
+  static get(key, fallback) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : fallback;
+  }
+  static set(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+}
+
+class UI {
+  static activeClone = null;
+  static activeBtn = null;
+
+  static openModal(modalId, btnId) {
+    const btn = document.getElementById(btnId);
+    const modal = document.getElementById(modalId);
+    const rect = btn.getBoundingClientRect();
+    const clone = document.createElement('div');
+    clone.className = 'morph-clone glass';
+    clone.style.top = rect.top + 'px';
+    clone.style.left = rect.left + 'px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.borderRadius = getComputedStyle(btn).borderRadius;
+    document.body.appendChild(clone);
+    this.activeClone = clone;
+    this.activeBtn = btn;
+    btn.style.opacity = '0';
+    void clone.offsetWidth;
+    clone.classList.add('expanded');
+    modal.classList.add('active');
+  }
+
+  static closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('active');
+    if (this.activeClone && this.activeBtn) {
+      const rect = this.activeBtn.getBoundingClientRect();
+      this.activeClone.classList.remove('expanded');
+      this.activeClone.style.top = rect.top + 'px';
+      this.activeClone.style.left = rect.left + 'px';
+      this.activeClone.style.width = rect.width + 'px';
+      this.activeClone.style.height = rect.height + 'px';
+      this.activeClone.style.borderRadius = getComputedStyle(this.activeBtn).borderRadius;
+      setTimeout(() => {
+        if (this.activeBtn) this.activeBtn.style.opacity = '1';
+        if (this.activeClone) this.activeClone.remove();
+        this.activeClone = null;
+        this.activeBtn = null;
+      }, 500); 
+    }
+  }
+}
+
+class Widget {
+  constructor(id) {
+    this.id = id;
+    this.element = document.createElement('div');
+    this.element.className = 'widget glass';
+    this.element.dataset.id = id;
+    this.element.draggable = true;
+    
+    this.element.addEventListener('dragstart', (e) => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', this.id);
+      setTimeout(() => this.element.classList.add('dragging'), 0);
+    });
+    this.element.addEventListener('dragend', () => {
+      this.element.classList.remove('dragging');
+    });
+    this.element.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+    this.element.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if (draggedId && draggedId !== this.id) {
+        window.app.swapWidgets(draggedId, this.id);
+      }
+    });
+
+    this.removeBtn = document.createElement('div');
+    this.removeBtn.className = 'widget-remove';
+    this.removeBtn.innerHTML = '✕';
+    this.removeBtn.onclick = (e) => {
+      e.stopPropagation();
+      this.onDestroy();
+    };
+    this.element.appendChild(this.removeBtn);
+  }
+  mount(container) { container.appendChild(this.element); }
+  unmount() { this.element.remove(); }
+  onDestroy() {}
+}
+
+class TimeWidget extends Widget {
+  constructor(id, config) {
+    super(id);
+    this.config = config;
+    this.element.classList.add('widget-time');
+    this.timeDisplay = document.createElement('div');
+    this.timeDisplay.className = 'time-display';
+    this.element.appendChild(this.timeDisplay);
+    this.update = this.update.bind(this);
+    this.interval = setInterval(this.update, 1000);
+    this.update();
+  }
+  update() {
+    const now = new Date();
+    const is12h = this.config.timeFormat === '12';
+    let h = now.getHours();
+    let m = now.getMinutes();
+    if (is12h) h = h % 12 || 12;
+    else h = h < 10 ? '0' + h : h;
+    m = m < 10 ? '0' + m : m;
+    this.timeDisplay.textContent = `${h}:${m}`;
+    this.timeDisplay.className = `time-display clock-${this.config.clockStyle || 'default'}`;
+  }
+  unmount() {
+    clearInterval(this.interval);
+    super.unmount();
+  }
+}
+
+class BatteryWidget extends Widget {
+  constructor(id) {
+    super(id);
+    this.element.classList.add('widget-battery');
+    this.iconContainer = document.createElement('div');
+    this.iconContainer.className = 'battery-icon-container';
+    this.levelIndicator = document.createElement('div');
+    this.levelIndicator.className = 'battery-level';
+    this.iconContainer.appendChild(this.levelIndicator);
+    this.textDisplay = document.createElement('div');
+    this.textDisplay.className = 'battery-text';
+    this.element.appendChild(this.iconContainer);
+    this.element.appendChild(this.textDisplay);
+    this.initBattery();
+  }
+  async initBattery() {
+    if (navigator.getBattery) {
+      try {
+        this.battery = await navigator.getBattery();
+        this.update();
+        this.battery.addEventListener('levelchange', () => this.update());
+        this.battery.addEventListener('chargingchange', () => this.update());
+      } catch (e) { this.mockBattery(); }
+    } else { this.mockBattery(); }
+  }
+  mockBattery() {
+    this.level = 0.85;
+    this.updateMock();
+  }
+  updateMock() {
+    this.levelIndicator.style.width = `${this.level * 100}%`;
+    this.textDisplay.textContent = `${Math.round(this.level * 100)}%`;
+  }
+  update() {
+    if (!this.battery) return;
+    const level = this.battery.level;
+    this.levelIndicator.style.width = `${level * 100}%`;
+    this.levelIndicator.style.background = this.battery.charging ? '#f5d742' : (level > 0.2 ? '#43e97b' : '#ff453a');
+    this.textDisplay.textContent = `${Math.round(level * 100)}%`;
+  }
+}
+
+class WeatherWidget extends Widget {
+  constructor(id) {
+    super(id);
+    this.element.classList.add('widget-weather');
+    this.icon = document.createElement('div');
+    this.icon.className = 'weather-icon';
+    this.temp = document.createElement('div');
+    this.temp.className = 'weather-temp';
+    this.city = document.createElement('div');
+    this.city.className = 'weather-city';
+    this.element.appendChild(this.icon);
+    this.element.appendChild(this.temp);
+    this.element.appendChild(this.city);
+    this.fetchWeather();
+  }
+  async fetchWeather() {
+    try {
+      const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+      const geoData = await geoRes.json();
+      this.city.textContent = geoData.city || 'Unknown';
+      const hour = new Date().getHours();
+      this.icon.textContent = (hour > 6 && hour < 19) ? '☀️' : '🌙';
+      this.temp.textContent = '72°';
+    } catch (e) {
+      this.icon.textContent = '⛅';
+      this.temp.textContent = '72°';
+      this.city.textContent = 'Cupertino';
+    }
+  }
+}
+
+class StopwatchWidget extends Widget {
+  constructor(id) {
+    super(id);
+    this.element.classList.add('widget-stopwatch');
+    this.display = document.createElement('div');
+    this.display.className = 'stopwatch-display';
+    this.display.textContent = '00:00.00';
+    this.controls = document.createElement('div');
+    this.controls.className = 'stopwatch-controls';
+    this.playBtn = document.createElement('button');
+    this.playBtn.className = 'sw-btn';
+    this.playBtn.textContent = '▶';
+    this.playBtn.onclick = () => this.toggle();
+    this.resetBtn = document.createElement('button');
+    this.resetBtn.className = 'sw-btn';
+    this.resetBtn.textContent = '↺';
+    this.resetBtn.onclick = () => this.reset();
+    this.controls.appendChild(this.playBtn);
+    this.controls.appendChild(this.resetBtn);
+    this.element.appendChild(this.display);
+    this.element.appendChild(this.controls);
+    this.startTime = 0;
+    this.elapsed = 0;
+    this.running = false;
+    this.raf = null;
+    this.tick = this.tick.bind(this);
+  }
+  toggle() {
+    if (this.running) {
+      this.running = false;
+      this.playBtn.textContent = '▶';
+      cancelAnimationFrame(this.raf);
+    } else {
+      this.running = true;
+      this.playBtn.textContent = '⏸';
+      this.startTime = performance.now() - this.elapsed;
+      this.raf = requestAnimationFrame(this.tick);
+    }
+  }
+  reset() {
+    this.running = false;
+    this.playBtn.textContent = '▶';
+    cancelAnimationFrame(this.raf);
+    this.elapsed = 0;
+    this.updateDisplay();
+  }
+  tick(now) {
+    this.elapsed = now - this.startTime;
+    this.updateDisplay();
+    if (this.running) this.raf = requestAnimationFrame(this.tick);
+  }
+  updateDisplay() {
+    const totalMs = Math.floor(this.elapsed);
+    const ms = Math.floor((totalMs % 1000) / 10);
+    const s = Math.floor((totalMs / 1000) % 60);
+    const m = Math.floor(totalMs / 60000);
+    const pad = (n) => n.toString().padStart(2, '0');
+    this.display.textContent = `${pad(m)}:${pad(s)}.${pad(ms)}`;
+  }
+  unmount() {
+    cancelAnimationFrame(this.raf);
+    super.unmount();
+  }
+}
+
+class CustomWidget extends Widget {
+  constructor(id, config) {
+    super(id);
+    this.element.classList.add('widget-custom');
+    const wConfig = config.widgets.find(w => w.id === id);
+    this.iframe = document.createElement('iframe');
+    this.iframe.style.width = '100%';
+    this.iframe.style.height = '100%';
+    this.iframe.style.border = 'none';
+    this.iframe.style.borderRadius = '32px';
+    this.iframe.style.pointerEvents = 'none';
+    this.iframe.setAttribute('allowtransparency', 'true');
+    const srcDoc = `
+      <html>
+      <head>
+      <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent !important; color: white; font-family: -apple-system, sans-serif; overflow: hidden; }
+        * { box-sizing: border-box; }
+        ${wConfig.css || ''}
+      </style>
+      </head>
+      <body>
+        ${wConfig.html || ''}
+        <script>${wConfig.js || ''}<\/script>
+      </body>
+      </html>
+    `;
+    this.iframe.srcdoc = srcDoc;
+    this.element.appendChild(this.iframe);
+    this.overlay = document.createElement('div');
+    this.overlay.style.position = 'absolute';
+    this.overlay.style.top = '0';
+    this.overlay.style.left = '0';
+    this.overlay.style.width = '100%';
+    this.overlay.style.height = '100%';
+    this.overlay.style.zIndex = '5';
+    this.element.appendChild(this.overlay);
+  }
+}
+
+class StandByApp {
+  constructor() {
+    const defaultIcon = 'data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" width="28" height="28" stroke="white" stroke-width="1.2" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>';
+    this.defaultConfig = {
+      wallpaper: 'https://images.unsplash.com/photo-1519114056088-b877fe073a5e?q=80&w=1333&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&w=2564&auto=format&fit=crop',
+      timeFormat: '12',
+      clockStyle: 'default',
+      widgets: [
+        { id: 'w0', type: 'time' },
+        { id: 'w1', type: 'weather' },
+        { id: 'w2', type: 'battery' }
+      ],
+      apps: [
+        { id: 'a1', name: 'Browser', url: 'https://example.com', icon: defaultIcon }
+      ]
+    };
+    
+    this.config = Store.get('StandBy', this.defaultConfig);
+    if(!this.config.clockStyle) this.config.clockStyle = 'default';
+    if(!this.config.apps) this.config.apps = this.defaultConfig.apps;
+    this.activeWidgets = new Map();
+    this.tempAppIcon = null;
+    
+    this.registry = {
+      time: { name: 'Time', icon: '🕒', class: TimeWidget },
+      weather: { name: 'Weather', icon: '🌤️', class: WeatherWidget },
+      battery: { name: 'Battery', icon: '🔋', class: BatteryWidget },
+      stopwatch: { name: 'Stopwatch', icon: '⏲️', class: StopwatchWidget },
+      custom: { name: 'Custom', icon: '✨', class: CustomWidget }
+    };
+    
+    this.initUI();
+    this.applyConfig();
+    this.renderWidgets();
+    this.renderApps();
+  }
+  
+  initUI() {
+    const wpInput = document.getElementById('cfg-wallpaper');
+    const wpFile = document.getElementById('cfg-wallpaper-file');
+    const timeInput = document.getElementById('cfg-time-format');
+    const clockStyleInput = document.getElementById('cfg-clock-style');
+    const appIconInput = document.getElementById('app-icon');
+    
+    wpInput.value = this.config.wallpaper;
+    timeInput.value = this.config.timeFormat;
+    clockStyleInput.value = this.config.clockStyle;
+    
+    wpInput.addEventListener('change', (e) => {
+      this.config.wallpaper = e.target.value;
+      this.saveAndApply();
+    });
+    
+    wpFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          this.config.wallpaper = ev.target.result;
+          wpInput.value = '';
+          this.saveAndApply();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    appIconInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          this.tempAppIcon = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    timeInput.addEventListener('change', (e) => {
+      this.config.timeFormat = e.target.value;
+      this.saveAndApply();
+      this.renderWidgets();
+    });
+
+    clockStyleInput.addEventListener('change', (e) => {
+      this.config.clockStyle = e.target.value;
+      this.saveAndApply();
+      this.renderWidgets();
+    });
+    
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      this.config = JSON.parse(JSON.stringify(this.defaultConfig));
+      wpInput.value = this.config.wallpaper;
+      timeInput.value = this.config.timeFormat;
+      clockStyleInput.value = this.config.clockStyle;
+      this.saveAndApply();
+      this.renderWidgets();
+      this.renderApps();
+      UI.closeModal('modal-settings');
+    });
+    
+    document.getElementById('btn-settings').addEventListener('click', () => UI.openModal('modal-settings', 'btn-settings'));
+    document.getElementById('btn-library').addEventListener('click', () => UI.openModal('modal-library', 'btn-library'));
+    
+    document.getElementById('btn-add-widget').addEventListener('click', () => {
+      this.populateSelector();
+      UI.openModal('modal-selector', 'btn-add-widget');
+    });
+  }
+  
+  populateSelector() {
+    const container = document.getElementById('selector-grid');
+    container.innerHTML = '';
+    
+    Object.entries(this.registry).forEach(([type, meta]) => {
+      const item = document.createElement('div');
+      item.className = 'grid-item';
+      item.innerHTML = `<div class="grid-icon">${meta.icon}</div><div class="grid-name">${meta.name}</div>`;
+      item.onclick = (e) => {
+        e.stopPropagation();
+        if (type === 'custom') {
+          UI.closeModal('modal-selector');
+          setTimeout(() => {
+            document.getElementById('cw-html').value = '';
+            document.getElementById('cw-css').value = '';
+            document.getElementById('cw-js').value = '';
+            UI.openModal('modal-custom-widget', 'btn-add-widget');
+          }, 300);
+        } else {
+          this.addWidget(type);
+          UI.closeModal('modal-selector');
+        }
+      };
+      container.appendChild(item);
+    });
+  }
+  
+  addWidget(type) {
+    const id = 'w' + Date.now();
+    this.config.widgets.push({ id, type });
+    this.saveAndApply();
+    this.mountWidget(id, type);
+  }
+
+  saveCustomWidget() {
+    const html = document.getElementById('cw-html').value;
+    const css = document.getElementById('cw-css').value;
+    const js = document.getElementById('cw-js').value;
+    const id = 'w' + Date.now();
+    this.config.widgets.push({ id, type: 'custom', html, css, js });
+    this.saveAndApply();
+    this.mountWidget(id, 'custom');
+    UI.closeModal('modal-custom-widget');
+  }
+  
+  removeWidget(id) {
+    this.config.widgets = this.config.widgets.filter(w => w.id !== id);
+    this.saveAndApply();
+    const instance = this.activeWidgets.get(id);
+    if (instance) {
+      instance.unmount();
+      this.activeWidgets.delete(id);
+    }
+  }
+
+  swapWidgets(id1, id2) {
+    const arr = this.config.widgets;
+    const idx1 = arr.findIndex(w => w.id === id1);
+    const idx2 = arr.findIndex(w => w.id === id2);
+    if (idx1 !== -1 && idx2 !== -1) {
+      const temp = arr[idx1];
+      arr[idx1] = arr[idx2];
+      arr[idx2] = temp;
+      this.saveAndApply();
+      this.renderWidgets();
+    }
+  }
+  
+  mountWidget(id, type) {
+    const WidgetClass = this.registry[type].class;
+    const instance = new WidgetClass(id, this.config);
+    instance.onDestroy = () => this.removeWidget(id);
+    instance.mount(document.getElementById('widgets-container'));
+    this.activeWidgets.set(id, instance);
+  }
+  
+  renderWidgets() {
+    document.getElementById('widgets-container').innerHTML = '';
+    this.activeWidgets.forEach(w => w.unmount());
+    this.activeWidgets.clear();
+    this.config.widgets.forEach(w => this.mountWidget(w.id, w.type));
+  }
+
+  renderApps() {
+    const grid = document.getElementById('app-grid');
+    grid.innerHTML = '';
+    
+    this.config.apps.forEach(app => {
+      const div = document.createElement('div');
+      div.className = 'app-circle';
+      div.onclick = (e) => this.launchApp(e, app.url);
+      div.innerHTML = app.icon.startsWith('<') 
+        ? app.icon 
+        : `<img src="${app.icon}" alt="${app.name}">`;
+      grid.appendChild(div);
+    });
+
+    const addBtn = document.createElement('div');
+    addBtn.className = 'app-circle';
+    addBtn.onclick = () => {
+      UI.closeModal('modal-library');
+      setTimeout(() => {
+        document.getElementById('app-name').value = '';
+        document.getElementById('app-url').value = 'https://';
+        document.getElementById('app-icon').value = '';
+        this.tempAppIcon = null;
+        UI.openModal('modal-add-app', 'btn-library');
+      }, 300);
+    };
+    addBtn.innerHTML = `<svg viewBox="0 0 24 24" width="28" height="28" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+    grid.appendChild(addBtn);
+  }
+
+  saveNewApp() {
+    const name = document.getElementById('app-name').value || 'New App';
+    const url = document.getElementById('app-url').value;
+    const defaultIcon = 'data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" width="28" height="28" stroke="white" stroke-width="1.2" fill="none"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>';
+    const icon = this.tempAppIcon || defaultIcon;
+    const id = 'a' + Date.now();
+    
+    this.config.apps.push({ id, name, url, icon });
+    this.saveAndApply();
+    this.renderApps();
+    UI.closeModal('modal-add-app');
+  }
+
+  launchApp(event, url) {
+    const circle = event.currentTarget;
+    const rect = circle.getBoundingClientRect();
+    const clone = document.createElement('div');
+    clone.style.position = 'fixed';
+    clone.style.top = rect.top + 'px';
+    clone.style.left = rect.left + 'px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.borderRadius = '50%';
+    clone.style.background = 'white';
+    clone.style.zIndex = '200';
+    clone.style.transition = 'all var(--spring-in)';
+    
+    document.body.appendChild(clone);
+    void clone.offsetWidth;
+    clone.style.transform = 'scale(50)';
+    
+    setTimeout(() => {
+      window.location.href = url;
+    }, 450);
+  }
+  
+  saveAndApply() {
+    Store.set('StandBy', this.config);
+    this.applyConfig();
+  }
+  
+  applyConfig() {
+    document.documentElement.style.setProperty('--bg-url', `url('${this.config.wallpaper}')`);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.app = new StandByApp();
+});
+</script>
+</body>
+</html>
